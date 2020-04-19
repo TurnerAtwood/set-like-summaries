@@ -1,13 +1,15 @@
 """
 /*	Connor, Auburn, Turner [CAT]
  *	Set-Like operations on Text for Summaries
- *
+ *	
  *
  */
 """
 import json
 from math import inf,ceil
 import numpy as np
+from operator import itemgetter
+
 # Sentence Tokenizer
 from nltk.tokenize import sent_tokenize
 # Sentence Embedding generator
@@ -16,27 +18,39 @@ import sister
 # IDEA - Summarize articles before taking set operations
 ## This could remove redundant sentences so we don't have to deal with them
 
-# DATA_FILE_NAME = "ProjectData.txt"
-FILE_NAME = "TwoArticles.txt"
+DATA_FILE_NAME = "ProjectData.txt"
+# FILE_NAME = "TwoArticles.txt"
 
 # Speed up testing by using only this many articles (inf -> all)
-ARTICLE_LIMIT = 2
+ARTICLE_LIMIT = inf
 EMBEDDER = sister.MeanEmbedding(lang="en")
-PERCENT_SUMMARIZED = 100
+PERCENT_SUMMARIZED = 30
 
 def main():
 	print("Reading and Formatting Data")
-	a1,a2 = read_data()
+	data = read_data()
+	art_choice = {"r":0, "c":1, "l":2}
+	oper_choice = {"d":difference, "i":intersection, "u":union}
+	print("Entering main loop: (Example Input: 1 r i c)")
+	while(True):	
+		break
+		# Input: Index: r/c/l d/i/u r/c/l
+		choice = input("Input (Enter to quit): ").split()
+		if not choice:
+			print("Exiting")
+			break
 
-	print("INTERSECTION")
-	print(intersection(a1,a2))
-	print()
-	# print(intersection(a2,a1))
+		try:
+			index = int(choice[0])
+			a1 = data[index][2+art_choice[choice[1]]]
+			a2 = data[index][2+art_choice[choice[3]]]
+			summary = oper_choice[choice[2]](a1, a2)
+		except KeyError as E:
+			print("Idiot.")
+			print(E)
 
-	print("DIFFERENCE")
-	print(difference(a1,a2))
-	print()
-	# print(difference(a2,a1))
+		print(summary)
+
 
 def intersection(a1, a2, summary_percent = PERCENT_SUMMARIZED):
 	indices = set_like_indices(a1, a2, summary_percent, True)
@@ -47,14 +61,14 @@ def difference(a1, a2, summary_percent = PERCENT_SUMMARIZED):
 	indices = set_like_indices(a1, a2, summary_percent, False)
 	return gen_summary(a1, indices)
 
-def union():
+def union(a1, a2, summary_percent):
 	pass
 
 # Intersection = True, Difference = False
 # Returns set of indices from specified operation
 def set_like_indices(a1, a2, summary_percent, oper): 
 	pairs = get_sentence_pairs(a1, a2)
-	pairs.sort(reverse=oper)
+	pairs.sort(key = itemgetter(0), reverse=True)
 
 	summary_size = ceil(len(a1) * summary_percent / 100)
 
@@ -100,15 +114,14 @@ def format(text):
 		embeddings.append( (EMBEDDER(sentence), sentence, index) )
 	return embeddings
 
+"""
 def read_data():
 	with open(FILE_NAME) as in_file:
 		# List with 2 articles
 		return [format(article) for article in json.load(in_file)]
-
-if __name__ == "__main__":
-	main()
-
 """
+
+
 # Use this for testing on the dataset
 def read_data():
 	with open(DATA_FILE_NAME) as in_file:
@@ -128,10 +141,13 @@ def read_data():
 				formatted_data[index] = raw_data[article_name]
 
 		# Convert the articles to 5-tuples
-		## (Title, summary, left, center, right)
+		## (Title, summary, right, center, left)
 		for i in range(data_size):
 			c_art = formatted_data[i]
 			formatted_data[i] = (c_art['theme'], c_art['theme-description'], format(c_art['right-context']), format(c_art['center-context']), format(c_art['left-context']))
 
 	return formatted_data
-"""
+
+
+if __name__ == "__main__":
+	main()
