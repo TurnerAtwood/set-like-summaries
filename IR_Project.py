@@ -1,4 +1,4 @@
-from math import inf,ceil
+from math import inf, ceil
 from nltk.tokenize import sent_tokenize # Sentence tokenizer
 from operator import itemgetter
 
@@ -161,10 +161,10 @@ def read_data():
 		for i in range(data_size):
 			unformatted_topic = formatted_topics[i]
 			formatted_topics[i] = (unformatted_topic['theme'],
-								   unformatted_topic['theme-description'],
-								   format(unformatted_topic['right-context']),
-								   format(unformatted_topic['center-context']),
-								   format(unformatted_topic['left-context']))
+														 unformatted_topic['theme-description'],
+														 format(unformatted_topic['right-context']),
+														 format(unformatted_topic['center-context']),
+														 format(unformatted_topic['left-context']))
 			bar.update(i + 1)
 		bar.finish()
 
