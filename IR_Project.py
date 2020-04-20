@@ -8,7 +8,7 @@ import progressbar
 import sister # Sentence Embedding generator
 import sys
 
-"""	
+"""
 COMP 5970 - Information Retrieval
 
 Final Project
@@ -41,7 +41,7 @@ def main():
 	print("\nEntering main loop: (Example Input: 1 % r i c)\n")
 	bias = {"r": 2, "c": 3, "l": 4}
 	operation = {"d": difference, "i": intersection, "u": union}
-	while(True):	
+	while(True):
 		user_specs = input(">> Input (Enter to quit): ").split()
 
 		if not user_specs:
@@ -76,7 +76,7 @@ def union(article1, article2, summary_percentage):
 
 # Intersection = True, Difference = False
 # Returns set of indices from specified operation
-def set_like_indices(article1, article2, summary_percentage, operation): 
+def set_like_indices(article1, article2, summary_percentage, operation):
 	pairs = get_sentence_pairs(article1, article2)
 	pairs.sort(key=itemgetter(0), reverse=operation)
 
@@ -105,7 +105,7 @@ def get_sentence_pairs(article1, article2):
 			score_with_sentence2 = cosine(sentence1[0], sentence2[0])
 			if score_with_sentence2 > best_score:
 				best_score = score_with_sentence2
-				best_sentence = sentence2 
+				best_sentence = sentence2
 
 		best_pairs.append((best_score, sentence1, best_sentence))
 
@@ -126,7 +126,7 @@ def format(text):
 	sentence_features = list()
 	for index, sentence in enumerate(text):
 		sentence_features.append( (EMBEDDER(sentence), sentence, index) )
-	
+
 	return sentence_features
 
 
@@ -143,16 +143,16 @@ def read_data():
 	with open(DATA_FILE_NAME) as in_file:
 		# Grab the JSON dictionary from the file
 		raw_topics = json.load(in_file)
-		
+
 		# This is bad, remove it when the limit is no longer needed
 		data_size = min(len(raw_topics), TOPIC_LIMIT)
-		
+
 		# Convert to a list based
 		formatted_topics = [0 for _ in range(data_size)]
 		for topic_index in range(data_size):
 			formatted_topics[topic_index] = raw_topics['news%d' % topic_index]
 
-		bar = progressbar.ProgressBar(maxval=data_size, 
+		bar = progressbar.ProgressBar(maxval=data_size,
 			widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
 
 		# Convert the topics to 5-tuples
@@ -160,10 +160,10 @@ def read_data():
 		bar.start()
 		for i in range(data_size):
 			unformatted_topic = formatted_topics[i]
-			formatted_topics[i] = (unformatted_topic['theme'], 
-								   unformatted_topic['theme-description'], 
-								   format(unformatted_topic['right-context']), 
-								   format(unformatted_topic['center-context']), 
+			formatted_topics[i] = (unformatted_topic['theme'],
+								   unformatted_topic['theme-description'],
+								   format(unformatted_topic['right-context']),
+								   format(unformatted_topic['center-context']),
 								   format(unformatted_topic['left-context']))
 			bar.update(i + 1)
 		bar.finish()
