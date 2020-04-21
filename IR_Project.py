@@ -39,7 +39,7 @@ def main():
     title_output.append(f"{i}: {data[i][0]}")
   print("\nTopic Themes:\n%s" % "\n".join(title_output))
 
-  print('\nEntering main loop: (Example Input: 1 % r i c OR "new")\n')
+  print('\nEntering main loop: (Example Input: 1 #/% 0/1 r i c OR "new")\n')
   # DEBUG: Not sure about the name bias - maybe 'source_type' or 'source_bias'?
   bias = {"r": 2, "c": 3, "l": 4}
   operation = {"d": difference, "i": intersection, "u": union}
@@ -54,22 +54,22 @@ def main():
       if user_specs == ['new']:
         article1 = format(input(">> Enter the first article:\n"))
         article2 = format(input("\n>> Enter the second article:\n"))
-        summary_percentage = int(input("\n>> Percentage: "))
+        summary_size_type = bool(int(input("\n>> What type of summary? (0 - #, 1 - %): ")))
+        summary_size = int(input("\n>> Summary Size (#/%): "))
         oper_choice = input(">> Operation (d/i/u): ")
-        summary = operation[oper_choice](article1, article2, summary_percentage)
+        summary = operation[oper_choice](article1, article2, summary_size, summary_size_type)
         print(f"\nSummary:\n{summary}\n")
 
       # The user will use the existing articles
       else:
         topic_index = int(user_specs[0])
-        summary_percentage = int(user_specs[1])
-        if summary_percentage < 0 or summary_percentage > 100:
-          raise ValueError("Enter a PERCENTAGE (0-100)")
-        article1 = data[topic_index][bias[user_specs[2]]]
-        article2 = data[topic_index][bias[user_specs[4]]]
-        oper_choice = user_specs[3]
+        summary_size = int(user_specs[1])
+        summary_size_type = bool(int(user_specs[2]))
+        article1 = data[topic_index][bias[user_specs[3]]]
+        article2 = data[topic_index][bias[user_specs[5]]]
+        oper_choice = user_specs[4]
         
-        summary = operation[oper_choice](article1, article2, summary_percentage)
+        summary = operation[oper_choice](article1, article2, summary_size, summary_size_type)
         print(f"\nOwer Summary:\n{summary}\n")
         print(f"\nThey're Summary:\n{data[topic_index][1]}\n")
         scores = Rouge().get_scores(summary, data[topic_index][1])[0]
@@ -89,30 +89,34 @@ def main():
       print("Not even close. Try reading more.\n")
 
 
-def intersection(article1, article2, summary_percentage=PERCENT_TO_SUMMARIZE):
-  indices = set_like_indices(article1, article2, summary_percentage, True)
+def intersection(article1, article2, summary_percentage, summary_size_type):
+  indices = set_like_indices(article1, article2, summary_percentage, summary_size_type, True)
   return generate_summary(article1, indices)
 
 
-# IDEA - Get best match for each sentence in a1, then take the worst-best pairs
-def difference(article1, article2, summary_percentage=PERCENT_TO_SUMMARIZE):
-  indices = set_like_indices(article1, article2, summary_percentage, False)
+def difference(article1, article2, summary_percentage, summary_size_type):
+  indices = set_like_indices(article1, article2, summary_percentage, summary_size_type, False)
   return generate_summary(article1, indices)
 
 
-def union(article1, article2, summary_percentage):
-  return "Not yet implemented."
+def union(article1, article2, summary_percentage, summary_size_type):
+  return "Union operation not yet implemented."
 
 
-# Intersection = True, Difference = False
+# (operation) Intersection = True, Difference = False
+# (summary_size_type) Sentence Number = False, Percentage Summary = True
 # Returns set of indices from specified operation
-def set_like_indices(article1, article2, summary_percentage, operation):
+def set_like_indices(article1, article2, summary_size, summary_size_type, operation):
   pairs = get_sentence_pairs(article1, article2)
   pairs.sort(key=itemgetter(0), reverse=operation)
 
-  summary_size = ceil(len(article1) * summary_percentage / 100)
+  # DEBUG: Sorry for this - very ugly
+  ## Do we want to allow 0?
+  if summary_size_type:
+    summary_size = ceil(len(article1) * summary_size / 100)
+  summary_size = max(0, summary_size)
+  summary_size = min(len(article1), summary_size)
 
-  # NOTE - No longer a set
   used_indices = [pair[1][2] for pair in pairs[:summary_size]]
 
   return used_indices
