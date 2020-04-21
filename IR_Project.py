@@ -6,6 +6,7 @@ import json
 import numpy as np
 import progressbar
 import sister # Sentence Embedding generator
+from rouge import Rouge
 import sys
 
 """
@@ -38,7 +39,8 @@ def main():
     title_output.append(f"{i}: {data[i][0]}")
   print("\nTopic Themes:\n%s" % "\n".join(title_output))
 
-  print("\nEntering main loop: (Example Input: 1 % r i c)\n")
+  print('\nEntering main loop: (Example Input: 1 % r i c OR "new")\n')
+  # DEBUG: Not sure about the name bias - maybe 'source_type' or 'source_bias'?
   bias = {"r": 2, "c": 3, "l": 4}
   operation = {"d": difference, "i": intersection, "u": union}
   while(True):
@@ -48,15 +50,43 @@ def main():
       sys.exit("Exiting...")
 
     try:
-      topic_index = int(user_specs[0])
-      summary_percentage = int(user_specs[1])
-      article1 = data[topic_index][bias[user_specs[2]]]
-      article2 = data[topic_index][bias[user_specs[4]]]
-      summary = operation[user_specs[3]](article1, article2, summary_percentage)
-      print('\n%s\n' % summary)
+      # The user will input his own articles
+      if user_specs == ['new']:
+        article1 = format(input(">> Enter the first article:\n"))
+        article2 = format(input("\n>> Enter the second article:\n"))
+        summary_percentage = int(input("\n>> Percentage: "))
+        oper_choice = input(">> Operation (d/i/u): ")
+        summary = operation[oper_choice](article1, article2, summary_percentage)
+        print(f"\nSummary:\n{summary}\n")
+
+      # The user will use the existing articles
+      else:
+        topic_index = int(user_specs[0])
+        summary_percentage = int(user_specs[1])
+        if summary_percentage < 0 or summary_percentage > 100:
+          raise ValueError("Enter a PERCENTAGE (0-100)")
+        article1 = data[topic_index][bias[user_specs[2]]]
+        article2 = data[topic_index][bias[user_specs[4]]]
+        oper_choice = user_specs[3]
+        
+        summary = operation[oper_choice](article1, article2, summary_percentage)
+        print(f"\nOwer Summary:\n{summary}\n")
+        print(f"\nThey're Summary:\n{data[topic_index][1]}\n")
+        scores = Rouge().get_scores(summary, data[topic_index][1])[0]
+        for metric_name in scores:
+          print(f"{metric_name}: {scores[metric_name]}")
+
+
+    # Constructive user error handling :)
     except KeyError as E:
       print("\nKeyError: %s" % E)
       print("Way to go idiot.\n")
+    except ValueError as E:
+      print("\nValueError: %s" % E)
+      print("Really? Great job you fart.\n")
+    except IndexError as E:
+      print("\nIndexError: %s" % E)
+      print("Not even close. Try reading more.\n")
 
 
 def intersection(article1, article2, summary_percentage=PERCENT_TO_SUMMARIZE):
