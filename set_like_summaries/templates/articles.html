@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Articles</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  </head>
+
+  <body>
+
+    <header>
+      <div class="title_container">
+        <h1 class="project_title">Set-Like Summaries</h1>
+        <h1 class="group_members">[CAT]</h1>
+      </div>
+    </header>
+
+    <div class="row">
+      <div class="column">
+        <div class="articles">
+          <label class="text_label" for="article1">Article 1: </label>
+          <textarea rows="15" cols="100" name="article1" class="article_text" form="summary_form">{{ article1 }}</textarea>
+
+          <label class="text_label" for="article2">Article 2: </label>
+          <textarea rows="15" cols="100" name="article2" class="article_text" form="summary_form">{{ article2 }}</textarea>
+        </div>
+      </div>
+      
+      <div class="column">
+        <div class="summary">
+          <label class="text_label" for="their_summary">Human Summary: </label>
+          <textarea rows="10" cols="100" name="their_summary" class="article_text" form="summary_form">{{ summary }}</textarea>
+        </div>
+        <form id="summary_form" action="{{ url_for('summary') }}" method="POST">
+
+          <div class="operation_group">
+            <select name="operation" size=3>
+              <option value="intersection">Intersection</button>
+              <option value="difference">Difference</button>
+              <option value"union">Union</button>
+            </select>
+          </div>
+
+          <div class="summary_length">
+            <label for="number_sentences">Desired Length of Summary (# of sentences): </label>
+            <input type="text" name="number_sentences" id="number_sentences"  value="0">
+          </div>
+
+          <div class="submit_button">
+            <button type="submit">Summarize</button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+  </body>
+</html>

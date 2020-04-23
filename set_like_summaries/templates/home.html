@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <title>Welcome</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="title_container">
+        <h1 class="project_title">Set-Like Summaries</h1>
+        <h1 class="group_members">[CAT]</h1>
+      </div>
+    </header>
+
+    <div class="home">
+      <p class="description">
+        You can either use our library of preloaded articles or your own custom ones.
+      </p>
+
+      <form method='POST'>
+        <div class="article_type_btn_group">
+          <button name="article_type" type="submit" value="library">Library</button>
+          <button name="article_type" type="submit" value="articles">Custom</button>
+        </div>
+      </form>
+    </div>
+
+  </body>
+</html>

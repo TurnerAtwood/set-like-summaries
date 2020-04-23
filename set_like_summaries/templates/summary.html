@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <title>Summary</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="title_container">
+        <h1 class="project_title">Set-Like Summaries</h1>
+        <h1 class="group_members">[CAT]</h1>
+      </div>
+    </header>
+
+    <div class="home">
+
+      <p class="our_summary">
+        Here is our generated summary:<br>
+        {{ our_summary }}
+      </p>
+
+    </div>
+
+    <div class="home">
+
+      <p class="their_summary">
+        Here is the human generated summary:<br>
+        {{ their_summary }}
+      </p>
+
+    </div>
+
+    <div class="home">
+
+      <p class="scores">
+        Rogue Scores:<br>
+        {{ scores }}
+      </p>
+
+    </div>
+
+  </body>
+</html>
