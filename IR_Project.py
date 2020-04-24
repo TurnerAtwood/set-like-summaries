@@ -191,27 +191,30 @@ def auburn_trash(nr_sentences):
     global TOPIC_LIMIT
     TOPIC_LIMIT = inf
     all_topics = read_data()
-    topics = []
+    s = {}
+    for n in range(1,nr_sentences):
+        topics = []
 
-    # Remove all topics lacking a summary
-    for topic in all_topics:
-        if topic[1]:
-            topics.append(topic)
+        # Remove all topics lacking a summary
+        for topic in all_topics:
+            if topic[1]:
+                topics.append(topic)
 
-    print(f'{len(topics)} Topics')
+        print(f'{len(topics)} Topics')
 
-    scores = []
-    count = 0
-    for topic in topics:
-      l_r_summary = intersection(topic[2], topic[4], nr_sentences, False)
-      r_l_summary = intersection(topic[4], topic[2], nr_sentences, False)
-      if not l_r_summary or not r_l_summary:
-        print(f"TOPIC: {topic[0]} SUCKS")
-      scores.append((Rouge().get_scores(l_r_summary,topic[1]), Rouge().get_scores(r_l_summary,topic[1])))
-      count += 1
-      if count % 50 == 0:
-        print(f'{count} Topics Analyzed...')
-    return scores
+        scores = []
+        count = 0
+        for topic in topics:
+          l_r_summary = intersection(topic[2], topic[4], nr_sentences, False)
+          r_l_summary = intersection(topic[4], topic[2], nr_sentences, False)
+          if not l_r_summary or not r_l_summary:
+            print(f"TOPIC: {topic[0]} SUCKS")
+          scores.append((Rouge().get_scores(l_r_summary,topic[1]), Rouge().get_scores(r_l_summary,topic[1])))
+          count += 1
+          if count % 50 == 0:
+            print(f'{count} Topics Analyzed...')
+        s[n] = scores
+    return s
 
 # This is not needed in light of the web interface.
 def run_interactive_mode(data):

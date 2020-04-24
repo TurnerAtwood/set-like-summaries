@@ -6,8 +6,8 @@ import IR_Project
 
 def main():
     if len(argv) == 2 and argv[1] == 'compute':
+        scores = IR_Project.auburn_trash(6)
         for nr_sent in range(1,6):
-            scores = IR_Project.auburn_trash(nr_sent)
             pickle.dump(scores,open(f'score_{nr_sent}','wb'))
             print(f'{nr_sent} sentences done...')
     else:
