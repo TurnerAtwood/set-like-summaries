@@ -154,14 +154,6 @@ def format(text):
   return sentence_features
 
 
-"""
-def read_data():
-with open(FILE_NAME) as in_file:
-# List with 2 articles
-return [format(article) for article in json.load(in_file)]
-"""
-
-
 # Use this for testing on the dataset
 def read_data():
   with open(DATA_FILE_NAME) as in_file:
@@ -193,6 +185,27 @@ def read_data():
 
   return formatted_topics
 
+def run_test(nr_sentences):
+    global TOPIC_LIMIT
+    TOPIC_LIMIT = inf
+    all_topics = read_data()
+    topics = []
+
+    # Remove all topics lacking a summary
+    for topic in all_topics:
+        if topic[1] != '':
+            topics.append(topic)
+
+    print(f'{len(topics) Topics')
+
+    scores = []
+    count = 0
+    for topic in topics 
+        scores.append((Rouge().get_scores(intersection(topic[2], topic[3], nr_sentences, False),topics[1]),Rouge().get_scores(intersection(topic[3], topic[2], nr_sentences, False),topics[1])))
+        count += 1
+        if count % 50 == 0:
+            print(f'{count} Topics Analyzed...')
+    return scores
 
 # This is not needed in light of the web interface.
 def run_interactive_mode(data):
