@@ -84,7 +84,7 @@ def difference(article1, article2, summary_size, summary_size_type, redundance_t
   return generate_summary(article1, indices)
 
 
-def union(article1, article2, summary_size, summary_size_type):
+def union(article1, article2, summary_size, summary_size_type, redundance_threshold):
   return "Union operation not yet implemented."
 
 
@@ -120,7 +120,7 @@ def remove_redundant_sentences(pairs, threshhold):
       pairs_similarity = cosine(current_pair[1][0], other_pair[1][0])
       if pairs_similarity > threshhold:
         current_pair_good = False
-        print(f"\nBAD PAIR ({pairs_similarity}):\n{current_pair[1][1]}\n{other_pair[1][1]}")
+        print(f"\nBAD PAIR ({pairs_similarity}):\nREMOVED: {current_pair[1][1]}\nKEPT: {other_pair[1][1]}")
         break
     if current_pair_good:
       kept_pairs.append(current_pair)

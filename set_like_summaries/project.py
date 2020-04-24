@@ -35,32 +35,53 @@ def summarize(article1, article2, operation_choice, num_sentences, their_summary
   return our_summary, scores
 
 
-def intersection(article1, article2, num_sentences):
-  indices = set_like_indices(article1, article2, num_sentences, True)
+def intersection(article1, article2, num_sentences, redundance_threshold = 0.92):
+  indices = set_like_indices(article1, article2, num_sentences, True, redundance_threshold)
   return generate_summary(article1, indices)
 
 
-def difference(article1, article2, num_sentences):
-  indices = set_like_indices(article1, article2, num_sentences, False)
+def difference(article1, article2, num_sentences, redundance_threshold = 0.92):
+  indices = set_like_indices(article1, article2, num_sentences, False, redundance_threshold)
   return generate_summary(article1, indices)
 
 
-def union(article1, article2, summary_percentage, num_sentences):
+def union(article1, article2, summary_percentage, num_sentences, redundance_threshold):
   return "Union operation not yet implemented."
 
 
 # (operation) Intersection = True, Difference = False
 # (summary_size_type) Sentence Number = False, Percentage Summary = True
 # Returns set of indices from specified operation
-def set_like_indices(article1, article2, num_sentences, operation):
+def set_like_indices(article1, article2, num_sentences, operation, redundance_threshold):
   pairs = get_sentence_pairs(article1, article2)
   pairs.sort(key=itemgetter(0), reverse=operation)
+
+  pairs = remove_redundant_sentences(pairs, redundance_threshold)
+
   num_sentences = max(1, num_sentences)
   summary_size = min(len(article1), num_sentences)
 
   used_indices = [pair[1][2] for pair in pairs[:summary_size]]
 
   return used_indices
+
+
+def remove_redundant_sentences(pairs, threshhold):
+  kept_pairs = list()
+  for i in range(len(pairs)):
+    current_pair = pairs[i]
+
+    current_pair_good = True
+    for other_pair in kept_pairs:
+      pairs_similarity = cosine(current_pair[1][0], other_pair[1][0])
+      if pairs_similarity > threshhold:
+        current_pair_good = False
+        print(f"\nBAD PAIR ({pairs_similarity}):\n{current_pair[1][1]}\n{other_pair[1][1]}")
+        break
+    if current_pair_good:
+      kept_pairs.append(current_pair)
+
+  return kept_pairs
 
 
 def generate_summary(article1, used_indices):
