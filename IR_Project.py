@@ -29,11 +29,10 @@ EMBEDDER = sister.MeanEmbedding(lang="en")
 BIAS_MAP = {"r": 2, "c": 3, "l": 4} # Maps specified bias to its index in the data
 
 def main():
-  print("Reading and formatting data...")
   data = read_data()
 
-  run_interactive_mode(data)
-  # run_test(data, "r", "l", 10, "1", "f")
+  # run_interactive_mode(data)
+  run_test(data, "r", "l", 10, "1", "f")
   
 
 # DEBUG - Rename after finalization
@@ -163,6 +162,9 @@ def read_data():
   # This is bad, remove it when the limit is no longer needed
   data_size = min(len(raw_topics), TOPIC_LIMIT)
 
+  print(f"Reading and formatting data ({data_size} topics)...")
+
+
   # Convert to a list based
   formatted_topics = [0 for _ in range(data_size)]
   for topic_index in range(data_size):
@@ -185,7 +187,7 @@ def read_data():
 
   return formatted_topics
 
-def run_test(nr_sentences):
+def auburn_trash(nr_sentences):
     global TOPIC_LIMIT
     TOPIC_LIMIT = inf
     all_topics = read_data()
@@ -193,18 +195,22 @@ def run_test(nr_sentences):
 
     # Remove all topics lacking a summary
     for topic in all_topics:
-        if topic[1] != '':
+        if topic[1]:
             topics.append(topic)
 
-    print(f'{len(topics) Topics')
+    print(f'{len(topics)} Topics')
 
     scores = []
     count = 0
-    for topic in topics 
-        scores.append((Rouge().get_scores(intersection(topic[2], topic[3], nr_sentences, False),topics[1]),Rouge().get_scores(intersection(topic[3], topic[2], nr_sentences, False),topics[1])))
-        count += 1
-        if count % 50 == 0:
-            print(f'{count} Topics Analyzed...')
+    for topic in topics:
+      l_r_summary = intersection(topic[2], topic[4], nr_sentences, False)
+      r_l_summary = intersection(topic[4], topic[2], nr_sentences, False)
+      if not l_r_summary or not r_l_summary:
+        print(f"TOPIC: {topic[0]} SUCKS")
+      scores.append((Rouge().get_scores(l_r_summary,topic[1]), Rouge().get_scores(r_l_summary,topic[1])))
+      count += 1
+      if count % 50 == 0:
+        print(f'{count} Topics Analyzed...')
     return scores
 
 # This is not needed in light of the web interface.

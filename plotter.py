@@ -1,14 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import argv from sys
+from sys import argv 
 import pickle
 import IR_Project
 
 def main():
-    if argv[1] == 'compute':
+    if len(argv) == 2 and argv[1] == 'compute':
         for nr_sent in range(1,6):
-            scores = IR_Project.run_test(nr_sent)
-            pickle.dump(score,open(f'score_{nr_sent}','wb'))
+            scores = IR_Project.auburn_trash(nr_sent)
+            pickle.dump(scores,open(f'score_{nr_sent}','wb'))
             print(f'{nr_sent} sentences done...')
     else:
         rouge1 = []
@@ -18,10 +18,12 @@ def main():
             score1 = 0
             scorel = 0
             for s in scores:
-                score1 += s[0]['f']
-                scorel += s[2]['f']
-            score1 /= len(scores)
-            scorel /= len(scores)
+                score1 += s[0][0]['rouge-1']['f']
+                scorel += s[0][0]['rouge-l']['f']
+                score1 += s[1][0]['rouge-1']['f']
+                scorel += s[1][0]['rouge-l']['f']
+            score1 /= len(scores) * 2
+            scorel /= len(scores) * 2
             rouge1.append(score1)
             rougel.append(scorel)
         fig,ax = plt.subplots()
@@ -32,4 +34,7 @@ def main():
         ax.set_title('f Score vs. Sentences')
         ax.legend()
         ax.plot()
+        plt.show()
 
+if __name__ == "__main__":
+    main()
