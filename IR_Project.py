@@ -27,12 +27,13 @@ DATA_FILE_NAME = "ProjectData.txt"
 TOPIC_LIMIT = 30 # Speed up testing by using only this many articles (inf -> all)
 EMBEDDER = sister.MeanEmbedding(lang="en")
 BIAS_MAP = {"r": 2, "c": 3, "l": 4} # Maps specified bias to its index in the data
+DEFAULT_RED_THRESH = 0.92
 
 def main():
   data = read_data()
 
-  # run_interactive_mode(data)
-  run_test(data, "r", "l", 10, "1", "f")
+  run_interactive_mode(data)
+  # run_test(data, "r", "l", 10, "1", "f")
   
 
 # DEBUG - Rename after finalization
@@ -58,7 +59,7 @@ def run_test(data, bias1, bias2, upper_bound, rouge_type, metric):
     best_score = -inf
     best_size = 0
     for summary_size in range(1, upper_bound+1):
-      this_summary = intersection(article1, article2, summary_size, 0)
+      this_summary = intersection(article1, article2, summary_size, 0, DEFAULT_RED_THRESH)
       this_score = score_summary(this_summary, topic[1], rouge_type, metric)
 
       if this_score > best_score:
@@ -73,13 +74,13 @@ def run_test(data, bias1, bias2, upper_bound, rouge_type, metric):
   for i in range(1,upper_bound):
       print(f"{i}: {best_size_counts[i]}")
 
-def intersection(article1, article2, summary_size, summary_size_type):
-  indices = set_like_indices(article1, article2, summary_size, summary_size_type, True)
+def intersection(article1, article2, summary_size, summary_size_type, redundance_threshold):
+  indices = set_like_indices(article1, article2, summary_size, summary_size_type, True, redundance_threshold)
   return generate_summary(article1, indices)
 
 
-def difference(article1, article2, summary_size, summary_size_type):
-  indices = set_like_indices(article1, article2, summary_size, summary_size_type, False)
+def difference(article1, article2, summary_size, summary_size_type, redundance_threshold):
+  indices = set_like_indices(article1, article2, summary_size, summary_size_type, False, redundance_threshold)
   return generate_summary(article1, indices)
 
 
@@ -90,18 +91,41 @@ def union(article1, article2, summary_size, summary_size_type):
 # (operation) Intersection = True, Difference = False
 # (summary_size_type) Sentence Number = False, Percentage Summary = True
 # Returns set of indices from specified operation
-def set_like_indices(article1, article2, summary_size, summary_size_type, operation):
+def set_like_indices(article1, article2, summary_size, summary_size_type, operation, redundance_threshold):
   pairs = get_sentence_pairs(article1, article2)
   pairs.sort(key=itemgetter(0), reverse=operation)
+
+  # Remove redundant sentences (from article1) in pairs
+  pairs = remove_redundant_sentences(pairs, redundance_threshold)
 
   # This handles both % AND # summary specifications (but it is not pretty)
   if summary_size_type:
     summary_size = ceil(len(article1) * summary_size / 100)
   summary_size = max(0, summary_size)
-  summary_size = min(len(article1), summary_size)
+  summary_size = min(len(pairs), summary_size)
 
   used_indices = [pair[1][2] for pair in pairs[:summary_size]]
   return used_indices
+
+
+# Takes in pairs of sentences from 2 articles -> remove sentences 
+## from article1 that are too similar to each other
+def remove_redundant_sentences(pairs, threshhold):
+  kept_pairs = list()
+  for i in range(len(pairs)):
+    current_pair = pairs[i]
+
+    current_pair_good = True
+    for other_pair in kept_pairs:
+      pairs_similarity = cosine(current_pair[1][0], other_pair[1][0])
+      if pairs_similarity > threshhold:
+        current_pair_good = False
+        print(f"\nBAD PAIR ({pairs_similarity}):\n{current_pair[1][1]}\n{other_pair[1][1]}")
+        break
+    if current_pair_good:
+      kept_pairs.append(current_pair)
+
+  return kept_pairs
 
 
 def generate_summary(article1, used_indices):
@@ -205,8 +229,8 @@ def auburn_trash(nr_sentences):
         scores = []
         count = 0
         for topic in topics:
-          l_r_summary = intersection(topic[2], topic[4], nr_sentences, False)
-          r_l_summary = intersection(topic[4], topic[2], nr_sentences, False)
+          l_r_summary = intersection(topic[2], topic[4], nr_sentences, False, DEFAULT_RED_THRESH)
+          r_l_summary = intersection(topic[4], topic[2], nr_sentences, False, DEFAULT_RED_THRESH)
           if not l_r_summary or not r_l_summary:
             print(f"TOPIC: {topic[0]} SUCKS")
           scores.append((Rouge().get_scores(l_r_summary,topic[1]), Rouge().get_scores(r_l_summary,topic[1])))
@@ -240,7 +264,7 @@ def run_interactive_mode(data):
         summary_size_type = bool(int(input("\n>> What type of summary? (0 - #, 1 - %): ")))
         summary_size = int(input("\n>> Summary Size (#/%): "))
         oper_choice = input(">> Operation (d/i/u): ")
-        summary = operation[oper_choice](article1, article2, summary_size, summary_size_type)
+        summary = operation[oper_choice](article1, article2, summary_size, summary_size_type, DEFAULT_RED_THRESH)
         print(f"\nSummary:\n{summary}\n")
 
       # The user will use the existing articles
@@ -252,7 +276,7 @@ def run_interactive_mode(data):
         article2 = data[topic_index][BIAS_MAP[user_specs[5]]]
         oper_choice = user_specs[4]
         
-        summary = operation[oper_choice](article1, article2, summary_size, summary_size_type)
+        summary = operation[oper_choice](article1, article2, summary_size, summary_size_type, DEFAULT_RED_THRESH)
         score = score_summary(summary, data[topic_index][1])
         print(f"\nOur Summary:\n{summary}\n")
         print(f"\nTheir Summary:\n{data[topic_index][1]}\n")
