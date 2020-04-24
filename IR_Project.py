@@ -24,82 +24,67 @@ The sky’s too fickle. It’s a play-place for butterflies.
 ## This could remove redundant sentences so we don't have to deal with them
 
 DATA_FILE_NAME = "ProjectData.txt"
-# FILE_NAME = "TwoArticles.txt"
-TOPIC_LIMIT = 5 # Speed up testing by using only this many articles (inf -> all)
+TOPIC_LIMIT = 30 # Speed up testing by using only this many articles (inf -> all)
 EMBEDDER = sister.MeanEmbedding(lang="en")
-PERCENT_TO_SUMMARIZE = 30
+BIAS_MAP = {"r": 2, "c": 3, "l": 4} # Maps specified bias to its index in the data
 
 def main():
   print("Reading and formatting data...")
   data = read_data()
 
-  # List all topic themes (titles)
-  title_output = []
+  run_interactive_mode(data)
+  # run_test(data, "r", "l", 10, "1", "f")
+  
+
+# DEBUG - Rename after finalization
+## For now, this is aims to find the optimal sentence length in [1, upper_bound]
+def run_test(data, bias1, bias2, upper_bound, rouge_type, metric):
+  bias1_index = BIAS_MAP[bias1]
+  bias2_index = BIAS_MAP[bias2]
+
+  best_size_counts = [0 for i in range(upper_bound+1)]
+
+  print("Running Tests...")
+  bar = progressbar.ProgressBar(maxval=len(data), widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+  bar.start()
   for i in range(len(data)):
-    title_output.append(f"{i}: {data[i][0]}")
-  print("\nTopic Themes:\n%s" % "\n".join(title_output))
+    bar.update(i+1)
+    topic = data[i]
+    # Ignore all present topics that have no reference summary
+    if not topic[1]:
+      continue
+    article1 = topic[bias1_index]
+    article2 = topic[bias2_index]
 
-  print('\nEntering main loop: (Example Input: 1 #/% 0/1 r i c OR "new")\n')
-  # DEBUG: Not sure about the name bias - maybe 'source_type' or 'source_bias'?
-  bias = {"r": 2, "c": 3, "l": 4}
-  operation = {"d": difference, "i": intersection, "u": union}
-  while(True):
-    user_specs = input(">> Input (Enter to quit): ").split()
+    best_score = -inf
+    best_size = 0
+    for summary_size in range(1, upper_bound+1):
+      this_summary = intersection(article1, article2, summary_size, 0)
+      this_score = score_summary(this_summary, topic[1], rouge_type, metric)
 
-    if not user_specs:
-      sys.exit("Exiting...")
+      if this_score > best_score:
+        best_score = this_score
+        best_size = summary_size
 
-    try:
-      # The user will input his own articles
-      if user_specs == ['new']:
-        article1 = format(input(">> Enter the first article:\n"))
-        article2 = format(input("\n>> Enter the second article:\n"))
-        summary_size_type = bool(int(input("\n>> What type of summary? (0 - #, 1 - %): ")))
-        summary_size = int(input("\n>> Summary Size (#/%): "))
-        oper_choice = input(">> Operation (d/i/u): ")
-        summary = operation[oper_choice](article1, article2, summary_size, summary_size_type)
-        print(f"\nSummary:\n{summary}\n")
+    best_size_counts[best_size] += 1
+  bar.finish()
 
-      # The user will use the existing articles
-      else:
-        topic_index = int(user_specs[0])
-        summary_size = int(user_specs[1])
-        summary_size_type = bool(int(user_specs[2]))
-        article1 = data[topic_index][bias[user_specs[3]]]
-        article2 = data[topic_index][bias[user_specs[5]]]
-        oper_choice = user_specs[4]
-        
-        summary = operation[oper_choice](article1, article2, summary_size, summary_size_type)
-        print(f"\nOwer Summary:\n{summary}\n")
-        print(f"\nThey're Summary:\n{data[topic_index][1]}\n")
-        scores = Rouge().get_scores(summary, data[topic_index][1])[0]
-        for metric_name in scores:
-          print(f"{metric_name}: {scores[metric_name]}")
+  # Print Results
+  print(f"Best sentence length counts (rouge-{rouge_type}, metric: {metric})")
+  for i in range(1,upper_bound):
+      print(f"{i}: {best_size_counts[i]}")
 
-
-    # Constructive user error handling :)
-    except KeyError as E:
-      print("\nKeyError: %s" % E)
-      print("Way to go idiot.\n")
-    except ValueError as E:
-      print("\nValueError: %s" % E)
-      print("Really? Great job you fart.\n")
-    except IndexError as E:
-      print("\nIndexError: %s" % E)
-      print("Not even close. Try reading more.\n")
-
-
-def intersection(article1, article2, summary_percentage, summary_size_type):
-  indices = set_like_indices(article1, article2, summary_percentage, summary_size_type, True)
+def intersection(article1, article2, summary_size, summary_size_type):
+  indices = set_like_indices(article1, article2, summary_size, summary_size_type, True)
   return generate_summary(article1, indices)
 
 
-def difference(article1, article2, summary_percentage, summary_size_type):
-  indices = set_like_indices(article1, article2, summary_percentage, summary_size_type, False)
+def difference(article1, article2, summary_size, summary_size_type):
+  indices = set_like_indices(article1, article2, summary_size, summary_size_type, False)
   return generate_summary(article1, indices)
 
 
-def union(article1, article2, summary_percentage, summary_size_type):
+def union(article1, article2, summary_size, summary_size_type):
   return "Union operation not yet implemented."
 
 
@@ -110,15 +95,13 @@ def set_like_indices(article1, article2, summary_size, summary_size_type, operat
   pairs = get_sentence_pairs(article1, article2)
   pairs.sort(key=itemgetter(0), reverse=operation)
 
-  # DEBUG: Sorry for this - very ugly
-  ## Do we want to allow 0?
+  # This handles both % AND # summary specifications (but it is not pretty)
   if summary_size_type:
     summary_size = ceil(len(article1) * summary_size / 100)
   summary_size = max(0, summary_size)
   summary_size = min(len(article1), summary_size)
 
   used_indices = [pair[1][2] for pair in pairs[:summary_size]]
-
   return used_indices
 
 
@@ -128,7 +111,14 @@ def generate_summary(article1, used_indices):
   return " ".join([article1[index][1] for index in ordered_indices])
 
 
-# Pairs are [(cosine, v1, v2)]
+# Wrapper for the rouge function to pick out a single rouge and metric.
+## type = '1'/'2'/'l', metric = 'f'/'p'/'r'
+def score_summary(hypothesis, reference, rouge_type = 'l', metric = 'f'):
+  scores = Rouge().get_scores(hypothesis, reference)[0]
+  rouge_l = scores[f'rouge-{rouge_type}'][metric]
+  return rouge_l
+
+# Pairs are [(similarity, v1, v2)]
 # We only need the best pair for each sentence in a1
 def get_sentence_pairs(article1, article2):
   best_pairs = list()
@@ -202,6 +192,60 @@ def read_data():
   bar.finish()
 
   return formatted_topics
+
+
+# This is not needed in light of the web interface.
+def run_interactive_mode(data):
+  # List all topic themes (titles)
+  title_output = []
+  for i in range(len(data)):
+    title_output.append(f"{i}: {data[i][0]}")
+  print("\nTopic Themes:\n%s" % "\n".join(title_output))
+
+  print('\nEntering main loop: (Example Input: 1 #/% 0/1 r i c OR "new")\n')
+  operation = {"d": difference, "i": intersection, "u": union}
+  while(True):
+    user_specs = input(">> Input (Enter to quit): ").split()
+
+    if not user_specs:
+      sys.exit("Exiting...")
+
+    try:
+      # The user will input his own articles
+      if user_specs == ['new']:
+        article1 = format(input(">> Enter the first article:\n"))
+        article2 = format(input("\n>> Enter the second article:\n"))
+        summary_size_type = bool(int(input("\n>> What type of summary? (0 - #, 1 - %): ")))
+        summary_size = int(input("\n>> Summary Size (#/%): "))
+        oper_choice = input(">> Operation (d/i/u): ")
+        summary = operation[oper_choice](article1, article2, summary_size, summary_size_type)
+        print(f"\nSummary:\n{summary}\n")
+
+      # The user will use the existing articles
+      else:
+        topic_index = int(user_specs[0])
+        summary_size = int(user_specs[1])
+        summary_size_type = bool(int(user_specs[2]))
+        article1 = data[topic_index][BIAS_MAP[user_specs[3]]]
+        article2 = data[topic_index][BIAS_MAP[user_specs[5]]]
+        oper_choice = user_specs[4]
+        
+        summary = operation[oper_choice](article1, article2, summary_size, summary_size_type)
+        score = score_summary(summary, data[topic_index][1])
+        print(f"\nOur Summary:\n{summary}\n")
+        print(f"\nTheir Summary:\n{data[topic_index][1]}\n")
+        print(f"Rouge Score: {score}")
+
+    # Constructive user error handling :)
+    except KeyError as E:
+      print("\nKeyError: %s" % E)
+      print("Way to go idiot.\n")
+    except ValueError as E:
+      print("\nValueError: %s" % E)
+      print("Really? Great job you fart.\n")
+    except IndexError as E:
+      print("\nIndexError: %s" % E)
+      print("Not even close. Try reading more.\n")
 
 
 if __name__ == "__main__":
