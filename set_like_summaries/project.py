@@ -24,24 +24,25 @@ DATA_FILE_NAME = './static/txt/ProjectData.txt'
 BIAS = {"1": "left-context", "2": "center-context", "3": "right-context"}
 EMBEDDER = sister.MeanEmbedding(lang="en")
 
-def summarize(article1, article2, operation_choice, num_sentences, their_summary):
+def summarize(article1, article2, operation_choice, similarity_choice, num_sentences, their_summary):
   bias = {"r": 2, "c": 3, "l": 4}
   operation = {"difference": difference, "intersection": intersection, "union": union}
+  similarity = {"cosine": cosine, "euclidean": euclidean, "manhattan": manhattan}
   article1_features = format(article1)
   article2_features = format(article2)
-  our_summary = operation[operation_choice](article1_features, article2_features, num_sentences)
+  our_summary = operation[operation_choice](article1_features, article2_features, similarity[similarity_choice], num_sentences)
   scores = Rouge().get_scores(our_summary, their_summary)[0]
 
   return our_summary, scores
 
 
-def intersection(article1, article2, num_sentences, redundance_threshold = 0.92):
-  indices = set_like_indices(article1, article2, num_sentences, True, redundance_threshold)
+def intersection(article1, article2, similarity, num_sentences, redundance_threshold=0.92):
+  indices = set_like_indices(article1, article2, similarity, num_sentences, True, redundance_threshold)
   return generate_summary(article1, indices)
 
 
-def difference(article1, article2, num_sentences, redundance_threshold = 0.92):
-  indices = set_like_indices(article1, article2, num_sentences, False, redundance_threshold)
+def difference(article1, article2, similarity, num_sentences, redundance_threshold=0.92):
+  indices = set_like_indices(article1, article2, similarity, num_sentences, False, redundance_threshold)
   return generate_summary(article1, indices)
 
 
@@ -52,8 +53,8 @@ def union(article1, article2, summary_percentage, num_sentences, redundance_thre
 # (operation) Intersection = True, Difference = False
 # (summary_size_type) Sentence Number = False, Percentage Summary = True
 # Returns set of indices from specified operation
-def set_like_indices(article1, article2, num_sentences, operation, redundance_threshold):
-  pairs = get_sentence_pairs(article1, article2)
+def set_like_indices(article1, article2, similarity, num_sentences, operation, redundance_threshold):
+  pairs = get_sentence_pairs(article1, article2, similarity)
   pairs.sort(key=itemgetter(0), reverse=operation)
 
   pairs = remove_redundant_sentences(pairs, redundance_threshold)
@@ -92,13 +93,13 @@ def generate_summary(article1, used_indices):
 
 # Pairs are [(cosine, v1, v2)]
 # We only need the best pair for each sentence in a1
-def get_sentence_pairs(article1, article2):
+def get_sentence_pairs(article1, article2, similarity):
   best_pairs = list()
   for sentence1 in article1:
     best_score = -inf
     best_sentence = None
     for sentence2 in article2:
-      score_with_sentence2 = cosine(sentence1[0], sentence2[0])
+      score_with_sentence2 = similarity(sentence1[0], sentence2[0])
       if score_with_sentence2 > best_score:
         best_score = score_with_sentence2
         best_sentence = sentence2
@@ -110,6 +111,15 @@ def get_sentence_pairs(article1, article2):
 
 def cosine(vector1, vector2):
   return (vector1.dot(vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2)))
+
+
+def euclidean(vector1, vector2):
+  return np.linalg.norm(vector1 - vector2)
+
+
+def manhattan(vector1, vector2):
+  diffs = np.subtract(vector1, vector2)
+  return sum([abs(diff) for diff in diffs])
 
 
 # Convert the text to list of sentence feature tuples

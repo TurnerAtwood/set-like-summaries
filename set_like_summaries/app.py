@@ -36,10 +36,11 @@ def summary():
   article1 = request.form['article1']
   article2 = request.form['article2']
   operation_choice = request.form['operation']
+  similarity_choice = request.form['similarity']
   num_sentences = int(request.form['number_sentences'])
   their_summary = request.form['their_summary']
 
-  our_summary, scores = summarize(article1, article2, operation_choice, num_sentences, their_summary)
+  our_summary, scores = summarize(article1, article2, operation_choice, similarity_choice, num_sentences, their_summary)
 
   return render_template('summary.html', our_summary=our_summary, their_summary=their_summary, scores=scores)
 
