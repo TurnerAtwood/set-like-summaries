@@ -33,7 +33,7 @@
         <form id="summary_form" action="{{ url_for('summary') }}" method="POST">
 
           <div class="operation_group">
-            <select name="operation" size=3>
+            <select name="operation" size=3 required>
               <option value="intersection">Intersection</button>
               <option value="difference">Difference</button>
               <option value"union">Union</button>
@@ -41,7 +41,7 @@
           </div>
 
           <div class="similarity_group">
-            <select name="similarity" size=3>
+            <select name="similarity" size=3 required>
               <option value="cosine">Cosine Similarity</button>
               <option value="euclidean">Euclidean Distance</button>
               <option value="manhattan">Manhattan Distance</button>
@@ -50,7 +50,7 @@
 
           <div class="summary_length">
             <label for="number_sentences">Desired Length of Summary (# of sentences): </label>
-            <input type="text" name="number_sentences" id="number_sentences"  value="0">
+            <input type="text" name="number_sentences" id="number_sentences"  value="{{ default_length }}">
           </div>
 
           <div class="submit_button">

@@ -1,4 +1,5 @@
 from flask import Flask, redirect, render_template, request, url_for
+from nltk.tokenize import sent_tokenize # Sentence tokenizer
 from project import get_articles, summarize
 
 app = Flask(__name__)
@@ -28,7 +29,9 @@ def articles():
     a1 = a2 = "Paste Custom Article Here."
     their_summary = "Paste Your Summary Here for Comparison"
 
-  return render_template('articles.html', article1=a1, article2=a2, summary=their_summary)
+  default_length = len(sent_tokenize(their_summary))
+
+  return render_template('articles.html', article1=a1, article2=a2, summary=their_summary, default_length=default_length)
 
 
 @app.route('/summary', methods=['GET', 'POST'])

@@ -28,8 +28,8 @@ def summarize(article1, article2, operation_choice, similarity_choice, num_sente
   bias = {"r": 2, "c": 3, "l": 4}
   operation = {"difference": difference, "intersection": intersection, "union": union}
   similarity = {"cosine": cosine, "euclidean": euclidean, "manhattan": manhattan}
-  article1_features = format(article1)
-  article2_features = format(article2)
+  article1_features = get_sentence_features(article1)
+  article2_features = get_sentence_features(article2)
   our_summary = operation[operation_choice](article1_features, article2_features, similarity[similarity_choice], num_sentences)
   scores = Rouge().get_scores(our_summary, their_summary)[0]
 
@@ -124,9 +124,7 @@ def manhattan(vector1, vector2):
 
 # Convert the text to list of sentence feature tuples
 # Sentence Features = [(embedding, sentence, index)]
-def format(text):
-  text = text.replace("\n", " ")
-  text = text.replace("\'", "'")
+def get_sentence_features(text):
   text = sent_tokenize(text)
 
   sentence_features = list()
@@ -136,11 +134,18 @@ def format(text):
   return sentence_features
 
 
+def format(text):
+  text = text.replace("\n", " ")
+  text = text.replace("\'", "'")
+
+  return text
+
+
 def get_articles(topic_index, article1_bias, article2_bias):
   with open(DATA_FILE_NAME) as in_file:
     raw_data = json.load(in_file)
-    article1 = raw_data['news%s' % topic_index][BIAS[article1_bias]]
-    article2 = raw_data['news%s' % topic_index][BIAS[article2_bias]]
+    article1 = format(raw_data['news%s' % topic_index][BIAS[article1_bias]])
+    article2 = format(raw_data['news%s' % topic_index][BIAS[article2_bias]])
     their_summary = raw_data['news%s' % topic_index]['theme-description']
 
     return article1, article2, their_summary
