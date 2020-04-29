@@ -24,7 +24,7 @@ The sky’s too fickle. It’s a play-place for butterflies.
 ## This could remove redundant sentences so we don't have to deal with them
 
 DATA_FILE_NAME = "ProjectData.txt"
-TOPIC_LIMIT = 30 # Speed up testing by using only this many articles (inf -> all)
+TOPIC_LIMIT = 5 # Speed up testing by using only this many articles (inf -> all)
 EMBEDDER = sister.MeanEmbedding(lang="en")
 BIAS_MAP = {"r": 2, "c": 3, "l": 4} # Maps specified bias to its index in the data
 DEFAULT_RED_THRESH = 0.92
@@ -34,7 +34,7 @@ def main():
 
   run_interactive_mode(data)
   # run_test(data, "r", "l", 10, "1", "f")
-  
+
 
 # DEBUG - Rename after finalization
 ## For now, this is aims to find the optimal sentence length in [1, upper_bound]
@@ -74,25 +74,26 @@ def run_test(data, bias1, bias2, upper_bound, rouge_type, metric):
   for i in range(1,upper_bound):
       print(f"{i}: {best_size_counts[i]}")
 
-def intersection(article1, article2, summary_size, summary_size_type, redundance_threshold):
-  indices = set_like_indices(article1, article2, summary_size, summary_size_type, True, redundance_threshold)
+
+def intersection(article1, article2, similarity, summary_size, summary_size_type, redundance_threshold):
+  indices = set_like_indices(article1, article2, similarity, summary_size, summary_size_type, True, redundance_threshold)
   return generate_summary(article1, indices)
 
 
-def difference(article1, article2, summary_size, summary_size_type, redundance_threshold):
-  indices = set_like_indices(article1, article2, summary_size, summary_size_type, False, redundance_threshold)
+def difference(article1, article2, similarity, summary_size, summary_size_type, redundance_threshold):
+  indices = set_like_indices(article1, article2, similarity, summary_size, summary_size_type, False, redundance_threshold)
   return generate_summary(article1, indices)
 
 
-def union(article1, article2, summary_size, summary_size_type, redundance_threshold):
+def union(article1, article2, similarity, summary_size, summary_size_type, redundance_threshold):
   return "Union operation not yet implemented."
 
 
 # (operation) Intersection = True, Difference = False
 # (summary_size_type) Sentence Number = False, Percentage Summary = True
 # Returns set of indices from specified operation
-def set_like_indices(article1, article2, summary_size, summary_size_type, operation, redundance_threshold):
-  pairs = get_sentence_pairs(article1, article2)
+def set_like_indices(article1, article2, similarity, summary_size, summary_size_type, operation, redundance_threshold):
+  pairs = get_sentence_pairs(article1, article2, similarity)
   pairs.sort(key=itemgetter(0), reverse=operation)
 
   # Remove redundant sentences (from article1) in pairs
@@ -108,7 +109,7 @@ def set_like_indices(article1, article2, summary_size, summary_size_type, operat
   return used_indices
 
 
-# Takes in pairs of sentences from 2 articles -> remove sentences 
+# Takes in pairs of sentences from 2 articles -> remove sentences
 ## from article1 that are too similar to each other
 def remove_redundant_sentences(pairs, threshhold):
   kept_pairs = list()
@@ -141,15 +142,16 @@ def score_summary(hypothesis, reference, rouge_type = 'l', metric = 'f'):
   rouge_l = scores[f'rouge-{rouge_type}'][metric]
   return rouge_l
 
+
 # Pairs are [(similarity, v1, v2)]
 # We only need the best pair for each sentence in a1
-def get_sentence_pairs(article1, article2):
+def get_sentence_pairs(article1, article2, similarity):
   best_pairs = list()
   for sentence1 in article1:
     best_score = -inf
     best_sentence = None
     for sentence2 in article2:
-      score_with_sentence2 = cosine(sentence1[0], sentence2[0])
+      score_with_sentence2 = similarity(sentence1[0], sentence2[0])
       if score_with_sentence2 > best_score:
         best_score = score_with_sentence2
         best_sentence = sentence2
@@ -161,6 +163,15 @@ def get_sentence_pairs(article1, article2):
 
 def cosine(vector1, vector2):
   return (vector1.dot(vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2)))
+
+
+def euclidean(vector1, vector2):
+  return np.linalg.norm(vector1 - vector2)
+
+
+def manhattan(vector1, vector2):
+  diffs = np.subtract(vector1, vector2)
+  return sum([abs(diff) for diff in diffs])
 
 
 # Convert the text to list of sentence feature tuples
@@ -211,6 +222,7 @@ def read_data():
 
   return formatted_topics
 
+
 def auburn_trash(nr_sentences):
     global TOPIC_LIMIT
     TOPIC_LIMIT = inf
@@ -240,6 +252,7 @@ def auburn_trash(nr_sentences):
         s[n] = scores
     return s
 
+
 # This is not needed in light of the web interface.
 def run_interactive_mode(data):
   # List all topic themes (titles)
@@ -248,8 +261,9 @@ def run_interactive_mode(data):
     title_output.append(f"{i}: {data[i][0]}")
   print("\nTopic Themes:\n%s" % "\n".join(title_output))
 
-  print('\nEntering main loop: (Example Input: 1 #/% 0/1 r i c OR "new")\n')
+  print('\nEntering main loop: (Example Input: 1 #/% 0/1 r i c C OR "new")\n')
   operation = {"d": difference, "i": intersection, "u": union}
+  similarity = {"C": cosine, "E": euclidean, "M": manhattan}
   while(True):
     user_specs = input(">> Input (Enter to quit): ").split()
 
@@ -263,8 +277,9 @@ def run_interactive_mode(data):
         article2 = format(input("\n>> Enter the second article:\n"))
         summary_size_type = bool(int(input("\n>> What type of summary? (0 - #, 1 - %): ")))
         summary_size = int(input("\n>> Summary Size (#/%): "))
-        oper_choice = input(">> Operation (d/i/u): ")
-        summary = operation[oper_choice](article1, article2, summary_size, summary_size_type, DEFAULT_RED_THRESH)
+        sim_choice = input("\n>> Similarity Function (C/E/M): ")
+        oper_choice = input("\n>> Operation (d/i/u): ")
+        summary = operation[oper_choice](article1, article2, similarity[sim_choice], summary_size, summary_size_type, DEFAULT_RED_THRESH)
         print(f"\nSummary:\n{summary}\n")
 
       # The user will use the existing articles
@@ -275,8 +290,9 @@ def run_interactive_mode(data):
         article1 = data[topic_index][BIAS_MAP[user_specs[3]]]
         article2 = data[topic_index][BIAS_MAP[user_specs[5]]]
         oper_choice = user_specs[4]
-        
-        summary = operation[oper_choice](article1, article2, summary_size, summary_size_type, DEFAULT_RED_THRESH)
+        sim_choice = user_specs[6]
+
+        summary = operation[oper_choice](article1, article2, similarity[sim_choice], summary_size, summary_size_type, DEFAULT_RED_THRESH)
         score = score_summary(summary, data[topic_index][1])
         print(f"\nOur Summary:\n{summary}\n")
         print(f"\nTheir Summary:\n{data[topic_index][1]}\n")
