@@ -5,8 +5,9 @@ from operator import itemgetter
 import json
 import numpy as np
 import progressbar
-import sister # Sentence Embedding generator
+import random
 from rouge import Rouge
+import sister # Sentence Embedding generator
 import sys
 
 """
@@ -24,7 +25,7 @@ The sky’s too fickle. It’s a play-place for butterflies.
 ## This could remove redundant sentences so we don't have to deal with them
 
 DATA_FILE_NAME = "ProjectData.txt"
-TOPIC_LIMIT = 5 # Speed up testing by using only this many articles (inf -> all)
+TOPIC_LIMIT = inf # Speed up testing by using only this many articles (inf -> all)
 EMBEDDER = sister.MeanEmbedding(lang="en")
 BIAS_MAP = {"r": 2, "c": 3, "l": 4} # Maps specified bias to its index in the data
 DEFAULT_RED_THRESH = 0.92
@@ -121,7 +122,7 @@ def remove_redundant_sentences(pairs, threshhold):
       pairs_similarity = cosine(current_pair[1][0], other_pair[1][0])
       if pairs_similarity > threshhold:
         current_pair_good = False
-        print(f"\nBAD PAIR ({pairs_similarity}):\nREMOVED: {current_pair[1][1]}\nKEPT: {other_pair[1][1]}")
+        #print(f"\nBAD PAIR ({pairs_similarity}):\nREMOVED: {current_pair[1][1]}\nKEPT: {other_pair[1][1]}")
         break
     if current_pair_good:
       kept_pairs.append(current_pair)
@@ -174,6 +175,10 @@ def manhattan(vector1, vector2):
   return sum([abs(diff) for diff in diffs])
 
 
+def random_selection(vector1, vector2):
+  return random.random() 
+
+
 # Convert the text to list of sentence feature tuples
 # Sentence Features = [(embedding, sentence, index)]
 def format(text):
@@ -222,12 +227,44 @@ def read_data():
 
   return formatted_topics
 
+def calc_scores(topics, nr_sentences, similarity, redundancy):
+    red = DEFAULT_RED_THRESH
+    if redundancy:
+        red = 1
+    scores = []
+
+    count = 0
+    for i,topic in enumerate(topics):
+        if i % 50 == 0 and i != 0:
+            print(f'{i} Topics Analyzed...')
+
+        r_l_summ = intersection(topic[2],topic[4],similarity,nr_sentences,False,red)
+        try:
+            r_l_score = Rouge().get_scores(r_l_summ, topic[1])
+        except:
+            count += 1
+            r_l_score = [{'rouge-1':{'f':0},'rouge-l':{'f':0}}]
+        #l_c_score = Rouge().get_scores(intersection(topic[2], topic[3], similarity, nr_sentences, False, red), topic[1])
+        l_r_summ = intersection(topic[4],topic[2],similarity,nr_sentences,False,red)
+        try:
+            l_r_score = Rouge().get_scores(l_r_summ, topic[1])
+        except:
+            count += 1
+            r_l_score = [{'rouge-1':{'f':0},'rouge-l':{'f':0}}]
+        #r_c_score = Rouge().get_scores(intersection(topic[4], topic[3], similarity, nr_sentences, False, red), topic[1])
+        #c_r_score = Rouge().get_scores(intersection(topic[3], topic[4], similarity, nr_sentences, False, red), topic[1])
+        #c_l_score = Rouge().get_scores(intersection(topic[3], topic[2], similarity, nr_sentences, False, red), topic[1])
+
+        #scores.append((l_r_score,l_c_score,r_l_score,r_c_score,c_r_score,c_l_score))
+        scores.append((l_r_score,r_l_score))
+    print(f'{count} Fucking Explosions')
+    return scores
 
 def auburn_trash(nr_sentences):
-    global TOPIC_LIMIT
-    TOPIC_LIMIT = inf
     all_topics = read_data()
     s = {}
+    sim_funcs = [cosine, euclidean, manhattan]
+    redundancy_flag = False
     for n in range(1,nr_sentences):
         topics = []
 
@@ -241,8 +278,8 @@ def auburn_trash(nr_sentences):
         scores = []
         count = 0
         for topic in topics:
-          l_r_summary = intersection(topic[2], topic[4], nr_sentences, False, DEFAULT_RED_THRESH)
-          r_l_summary = intersection(topic[4], topic[2], nr_sentences, False, DEFAULT_RED_THRESH)
+          l_r_summary = intersection(topic[2], topic[4], sim_func, nr_sentences, False, DEFAULT_RED_THRESH)
+          r_l_summary = intersection(topic[4], topic[2], sim_func, nr_sentences, False, DEFAULT_RED_THRESH)
           if not l_r_summary or not r_l_summary:
             print(f"TOPIC: {topic[0]} SUCKS")
           scores.append((Rouge().get_scores(l_r_summary,topic[1]), Rouge().get_scores(r_l_summary,topic[1])))
