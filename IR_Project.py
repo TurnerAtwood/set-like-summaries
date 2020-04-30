@@ -37,45 +37,6 @@ def main():
   # run_test(data, "r", "l", 10, "1", "f")
 
 
-# DEBUG - Rename after finalization
-## For now, this is aims to find the optimal sentence length in [1, upper_bound]
-def run_test(data, bias1, bias2, upper_bound, rouge_type, metric):
-  bias1_index = BIAS_MAP[bias1]
-  bias2_index = BIAS_MAP[bias2]
-
-  best_size_counts = [0 for i in range(upper_bound+1)]
-
-  print("Running Tests...")
-  bar = progressbar.ProgressBar(maxval=len(data), widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
-  bar.start()
-  for i in range(len(data)):
-    bar.update(i+1)
-    topic = data[i]
-    # Ignore all present topics that have no reference summary
-    if not topic[1]:
-      continue
-    article1 = topic[bias1_index]
-    article2 = topic[bias2_index]
-
-    best_score = -inf
-    best_size = 0
-    for summary_size in range(1, upper_bound+1):
-      this_summary = intersection(article1, article2, summary_size, 0, DEFAULT_RED_THRESH)
-      this_score = score_summary(this_summary, topic[1], rouge_type, metric)
-
-      if this_score > best_score:
-        best_score = this_score
-        best_size = summary_size
-
-    best_size_counts[best_size] += 1
-  bar.finish()
-
-  # Print Results
-  print(f"Best sentence length counts (rouge-{rouge_type}, metric: {metric})")
-  for i in range(1,upper_bound):
-      print(f"{i}: {best_size_counts[i]}")
-
-
 def intersection(article1, article2, similarity, summary_size, summary_size_type, redundance_threshold):
   indices = set_like_indices(article1, article2, similarity, summary_size, summary_size_type, True, redundance_threshold)
   return generate_summary(article1, indices)
@@ -176,7 +137,7 @@ def manhattan(vector1, vector2):
 
 
 def random_selection(vector1, vector2):
-  return random.random() 
+  return random.random()
 
 
 # Convert the text to list of sentence feature tuples
@@ -259,36 +220,6 @@ def calc_scores(topics, nr_sentences, similarity, redundancy):
         scores.append((l_r_score,r_l_score))
     print(f'{count} Fucking Explosions')
     return scores
-
-def auburn_trash(nr_sentences):
-    all_topics = read_data()
-    s = {}
-    sim_funcs = [cosine, euclidean, manhattan]
-    redundancy_flag = False
-    for n in range(1,nr_sentences):
-        topics = []
-
-        # Remove all topics lacking a summary
-        for topic in all_topics:
-            if topic[1]:
-                topics.append(topic)
-
-        print(f'{len(topics)} Topics')
-
-        scores = []
-        count = 0
-        for topic in topics:
-          l_r_summary = intersection(topic[2], topic[4], sim_func, nr_sentences, False, DEFAULT_RED_THRESH)
-          r_l_summary = intersection(topic[4], topic[2], sim_func, nr_sentences, False, DEFAULT_RED_THRESH)
-          if not l_r_summary or not r_l_summary:
-            print(f"TOPIC: {topic[0]} SUCKS")
-          scores.append((Rouge().get_scores(l_r_summary,topic[1]), Rouge().get_scores(r_l_summary,topic[1])))
-          count += 1
-          if count % 50 == 0:
-            print(f'{count} Topics Analyzed...')
-        s[n] = scores
-    return s
-
 
 # This is not needed in light of the web interface.
 def run_interactive_mode(data):
