@@ -1,18 +1,20 @@
+from sys import argv
+
 import matplotlib.pyplot as plt
 import numpy as np
-from sys import argv 
+
 import pickle
-import IR_Project
+import project
 
 def main():
-    sim_funcs = {IR_Project.cosine:'Cosine'}
-    #sim_funcs = {IR_Project.cosine:'Cosine', IR_Project.euclidean:'Euclidean', IR_Project.manhattan:'Manhattan'}
+    sim_funcs = {project.cosine:'Cosine'}
+    #sim_funcs = {project.cosine:'Cosine', project.euclidean:'Euclidean', project.manhattan:'Manhattan'}
     redundancy = [True, False]
     #redundancy = [False]
     max_sent = 6
 
     if len(argv) == 2 and argv[1] == 'compute':
-        all_topic = IR_Project.read_data()
+        all_topic = project.read_data()
         topic_data = []
         for topic in all_topic:
             if topic[1]:
@@ -23,7 +25,7 @@ def main():
         for red in redundancy:
             for sim in sim_funcs:
                 for nr_sent in range(1, max_sent):
-                    scores[(red,sim,nr_sent)] = IR_Project.calc_scores(topic_data, nr_sent, sim, red)
+                    scores[(red,sim,nr_sent)] = project.calc_scores(topic_data, nr_sent, sim, red)
                     print(f'{nr_sent} sentence summaries done...')
                 print('Similarity function done...')
             print('Redundant included done...' if red else 'Redundant excluded done...')

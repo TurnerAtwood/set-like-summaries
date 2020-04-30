@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Library</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script type="text/javascript">
+      function addTopics() {
+        var select = document.getElementById("topic_selection");
+        $.getJSON("../static/json/topics.json", function(topics) {
+          for (var i = 0; i < topics.length; i++) {
+            var option = document.createElement("option");
+            var curr = topics[i]
+
+            option.value = curr[0]
+            option.text = curr[1]
+            select.add(option);
+          }
+        })
+      };
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  </head>
+
+  <body onload="addTopics()">
+    <header>
+      <div class="title_container">
+        <h1 class="project_title">Set-Like Summaries</h1>
+        <h1 class="group_members">[CAT]</h1>
+      </div>
+    </header>
+
+    <div>
+      <p class="description">
+        Here you can choose from any of our predefined topics.
+        
+        Each topic contains three different articles, each representing a political bias (left, center, or right).
+      </p>
+
+      <form action="{{ url_for('articles') }}" method="POST">
+        <div class="select_group">
+          <label class="select_label" for="topic_selection">Select a Topic: </label>
+          <select name="topic_selection" id="topic_selection">
+            <option selected disabled>-- Please Select One --</option>
+          </select>
+
+          <label class="select_label" for="article1_selection">Select Article 1: </label>
+          <select name="article1_selection" id="article1_selection">
+            <option selected disabled>-- Please Select One --</option>
+            <option value="1">Left</option>
+            <option value="2">Center</option>
+            <option value="3">Right</option>
+          </select>
+
+          <label class="select_label" for="article2_selection">Select Article 2: </label>
+          <select name="article2_selection" id="article2_selection">
+            <option selected disabled>-- Please Select One --</option>
+            <option value="1">Left</option>
+            <option value="2">Center</option>
+            <option value="3">Right</option>
+          </select>
+        </div>
+         
+        <div>
+          <button type="submit" class="load">Load</button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>
