@@ -38,15 +38,13 @@
       </p>
 
       <form action="{{ url_for('articles') }}" method="POST">
-        <div class="dropdown">
+        <div class="select_group">
           <label class="select_label" for="topic_selection">Select a Topic: </label>
           <select name="topic_selection" id="topic_selection">
             <option selected disabled>-- Please Select One --</option>
           </select>
-        </div>
 
-        <div class="dropdown">
-          <label class="select_lable" for="article1_selection">Select Article1: </label>
+          <label class="select_label" for="article1_selection">Select Article 1: </label>
           <select name="article1_selection" id="article1_selection">
             <option selected disabled>-- Please Select One --</option>
             <option value="1">Left</option>
@@ -54,7 +52,7 @@
             <option value="3">Right</option>
           </select>
 
-          <label class="select_label" for="article2_selection">Select Article2: </label>
+          <label class="select_label" for="article2_selection">Select Article 2: </label>
           <select name="article2_selection" id="article2_selection">
             <option selected disabled>-- Please Select One --</option>
             <option value="1">Left</option>

@@ -32,19 +32,19 @@
         </div>
         <form id="summary_form" action="{{ url_for('summary') }}" method="POST">
 
-          <div class="operation_group">
+          <div class="select_group">
+            <label class="select_label" for="operation">Operation: </label>
             <select name="operation" size=3 required>
-              <option value="intersection">Intersection</button>
-              <option value="difference">Difference</button>
-              <option value"union">Union</button>
+              <option value="intersection">Intersection</option>
+              <option value="difference">Difference</option>
+              <option value"union">Union</option>
             </select>
-          </div>
 
-          <div class="similarity_group">
+            <label class="select_label" for="similarity">Similarity: </label>
             <select name="similarity" size=3 required>
-              <option value="cosine">Cosine Similarity</button>
-              <option value="euclidean">Euclidean Distance</button>
-              <option value="manhattan">Manhattan Distance</button>
+              <option value="cosine">Cosine Similarity</option>
+              <option value="euclidean">Euclidean Distance</option>
+              <option value="manhattan">Manhattan Distance</option>
             </select>
           </div>
 

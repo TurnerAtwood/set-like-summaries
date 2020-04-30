@@ -26,8 +26,8 @@ def articles():
     article2_bias = request.form['article2_selection']
     a1, a2, their_summary = get_articles(topic_index, article1_bias, article2_bias)
   else:
-    a1 = a2 = "Paste Custom Article Here."
-    their_summary = "Paste Your Summary Here for Comparison"
+    a1 = a2 = "Paste custom article here."
+    their_summary = "Paste your summary here for comparison."
 
   default_length = len(sent_tokenize(their_summary))
 

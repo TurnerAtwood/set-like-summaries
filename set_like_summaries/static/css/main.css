@@ -91,12 +91,22 @@ textarea.article_text {
 
 label.text_label {
   margin: 10px;
-  display:block;
+  display: block;
+}
+
+div.select_group select {
+  margin: 10px;
+  display: block;
+}
+
+label.select_label {
+  margin: 10px;
+  display: block;
 }
 
 div.operation_group {
   margin: 10px;
-  display:block;
+  display: block;
 }
 
 div.summary_length {
