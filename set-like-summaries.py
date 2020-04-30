@@ -1,6 +1,6 @@
 from flask import Flask, redirect, render_template, request, url_for
 from nltk.tokenize import sent_tokenize # Sentence tokenizer
-from project import get_articles, summarize
+from py.project import get_articles, summarize
 
 app = Flask(__name__)
 
