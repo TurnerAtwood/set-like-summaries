@@ -6,7 +6,6 @@
   </head>
 
   <body>
-
     <header>
       <div class="title_container">
         <h1 class="project_title">Set-Like Summaries</h1>
@@ -30,8 +29,8 @@
           <label class="text_label" for="their_summary">Human Summary: </label>
           <textarea rows="10" cols="100" name="their_summary" class="article_text" form="summary_form">{{ summary }}</textarea>
         </div>
-        <form id="summary_form" action="{{ url_for('summary') }}" method="POST">
 
+        <form id="summary_form" action="{{ url_for('summary') }}" method="POST">
           <div class="select_group">
             <label class="select_label" for="operation">Operation: </label>
             <select name="operation" size=3 required>
@@ -56,10 +55,8 @@
           <div class="submit_button">
             <button type="submit">Summarize</button>
           </div>
-
         </form>
       </div>
     </div>
-
   </body>
 </html>
