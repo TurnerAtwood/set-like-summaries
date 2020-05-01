@@ -236,7 +236,7 @@ def calc_scores(topics, nr_sentences, similarity, redundancy):
 
     #scores.append((l_r_score, l_c_score, r_l_score, r_c_score, c_r_score, c_l_score))
     scores.append((l_r_score, r_l_score))
-  print(f'{count} Fucking Explosions')
+  print(f'{count} Bad sentences')
   return scores
 
 
