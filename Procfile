@@ -1,2 +1,2 @@
-web: gunicorn set-like-summaries:app
+web: gunicorn set-like-summaries:app --preload
 
