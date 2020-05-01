@@ -1,2 +1,2 @@
-web: gunicorn app:app
+web: gunicorn set-like-summaries:app
 
