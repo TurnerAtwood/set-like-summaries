@@ -1,2 +1,2 @@
 punkt
-tokenize
+word_tokenize
