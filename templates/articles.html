@@ -33,10 +33,9 @@
         <form id="summary_form" action="{{ url_for('summary') }}" method="POST">
           <div class="select_group">
             <label class="select_label" for="operation">Operation: </label>
-            <select name="operation" size=3 required>
+            <select name="operation" size=2 required>
               <option value="intersection">Intersection</option>
               <option value="difference">Difference</option>
-              <option value"union">Union</option>
             </select>
 
             <label class="select_label" for="similarity">Similarity: </label>

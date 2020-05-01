@@ -5,8 +5,8 @@ from operator import itemgetter
 import json
 import numpy as np
 import progressbar
-import sister # Sentence Embedding generator
 from rouge import Rouge
+import sister # Sentence Embedding generator
 import sys
 
 """
@@ -22,7 +22,7 @@ The sky’s too fickle. It’s a play-place for butterflies.
 
 DATA_FILE_NAME = './static/txt/ProjectData.txt'
 EMBEDDER = sister.MeanEmbedding(lang="en")
-TOPIC_LIMIT = 5 # Set to inf to run over all topics in CLI
+TOPIC_LIMIT = inf # Set to inf to run over all topics in CLI
 
 def main():
   data = read_data()
@@ -30,7 +30,7 @@ def main():
 
 
 def summarize(article1, article2, operation_choice, similarity_choice, num_sentences, their_summary):
-  operation = {"difference": difference, "intersection": intersection, "union": union}
+  operation = {"difference": difference, "intersection": intersection}
   similarity = {"cosine": cosine, "euclidean": euclidean, "manhattan": manhattan}
   article1_features = get_sentence_features(article1)
   article2_features = get_sentence_features(article2)
@@ -48,10 +48,6 @@ def intersection(article1, article2, similarity, num_sentences, redundance_thres
 def difference(article1, article2, similarity, num_sentences, redundance_threshold=0.92):
   indices = set_like_indices(article1, article2, similarity, num_sentences, False, redundance_threshold)
   return generate_summary(article1, indices)
-
-
-def union(article1, article2, summary_percentage, num_sentences, redundance_threshold):
-  return "Union operation not yet implemented."
 
 
 # (operation) Intersection = True, Difference = False
@@ -250,7 +246,7 @@ def run_interactive_mode(data):
   print("\nTopic Themes:\n%s" % "\n".join(title_output))
   print('\nEntering main loop: (Example Input: 1 # r i c C OR "new")\n')
 
-  operation = {"d": difference, "i": intersection, "u": union}
+  operation = {"d": difference, "i": intersection}
   similarity = {"C": cosine, "E": euclidean, "M": manhattan}
   bias = {"r": 2, "c": 3, "l": 4}
 
@@ -265,12 +261,13 @@ def run_interactive_mode(data):
       if user_specs == ['new']:
         article1 = format(input("\n>> Enter the first article:\n"))
         article2 = format(input("\n>> Enter the second article:\n"))
+        their_summary = input("\n>> Enter your summary:\n")
         summary_size = int(input("\n>> Summary Size (#): "))
-        oper_choice = input("\n>> Operation (d/i/u): ")
+        oper_choice = input("\n>> Operation (d/i): ")
         sim_choice = input("\n>> Similarity Function (C/E/M): ")
 
         summary = operation[oper_choice](get_sentence_features(article1), get_sentence_features(article2), similarity[sim_choice], summary_size)
-        score = score_summary(summary, data[topic_index][1])
+        score = score_summary(summary, their_summary)
 
       # The user will use the existing articles
       else:
