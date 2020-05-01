@@ -1,7 +1,7 @@
 # Quick fix to install all of the dependencies for the package
 import os
 
-DEPENDENCIES = ['scipy', 'cython', 'numpy', 'sister', 'nltk', 'rouge', 'progressbar']
+DEPENDENCIES = ['scipy', 'cython', 'numpy', 'sister', 'nltk', 'rouge', 'progressbar', 'Flask']
 
 def main():
 	for dep in DEPENDENCIES:

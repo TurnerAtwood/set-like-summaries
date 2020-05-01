@@ -1,7 +1,7 @@
 import json
 
-IN_FILE = '../static/txt/ProjectData.txt'
-OUT_FILE = '../static/json/topics.json'
+IN_FILE = './static/txt/ProjectData.txt'
+OUT_FILE = './static/json/topics.json'
 def main():
   topics = []
 
