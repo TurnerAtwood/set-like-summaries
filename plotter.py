@@ -69,7 +69,7 @@ def main():
                         ax.plot(list(range(1,max_sent)),rouges[rouge],label=label_prefix + f'Rouge-[rouge]')
             ax.set_xlabel('Number of Sentences')
             ax.set_ylabel('f Score')
-            ax.set_title(title)
+            ax.set_title(title+sc)
             ax.legend()
             #ax.plot()
             plt.show()
