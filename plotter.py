@@ -7,10 +7,29 @@ import pickle
 import project
 
 def main():
-    sim_funcs = {project.cosine:'Cosine'}
-    #sim_funcs = {project.cosine:'Cosine', project.euclidean:'Euclidean', project.manhattan:'Manhattan'}
+    #sim_funcs = {project.cosine:'Cosine', project.euclidean:'Euclidean', project.manhattan:'Manhattan', project.random_selection:'Random'}
+    #redundancy = [True, False]
+    #score_type = ['1','2','l']
+    # Redundant vs NonRedundant
+    sim_funcs = {project.cosine:'Cosine', project.random_selection:'Random'}
     redundancy = [True, False]
-    #redundancy = [False]
+    title = f'f Score vs. Sentences: Redundancy'
+    score_type = ['1','2','l']
+    # 1gram all 4
+    sim_funcs = {project.cosine:'Cosine', project.euclidean:'Euclidean', project.manhattan:'Manhattan', project.random_selection:'Random'}
+    redundancy = [False]
+    title = f'f Score vs. Sentences: Rouge-1'
+    score_type = ['1']
+    # 2gram all 4
+    sim_funcs = {project.cosine:'Cosine', project.euclidean:'Euclidean', project.manhattan:'Manhattan', project.random_selection:'Random'}
+    redundancy = [False]
+    title = f'f Score vs. Sentences: Rouge-2'
+    score_type = ['1']
+    # lgram all 4
+    sim_funcs = {project.cosine:'Cosine', project.euclidean:'Euclidean', project.manhattan:'Manhattan', project.random_selection:'Random'}
+    redundancy = [False]
+    title = f'f Score vs. Sentences: Rouge-l'
+    score_type = ['l']
     max_sent = 6
 
     if len(argv) == 2 and argv[1] == 'compute':
@@ -35,8 +54,7 @@ def main():
     for sim in sim_funcs:
         fig,ax = plt.subplots()
         for red in redundancy:
-            rouge1 = []
-            rougel = []
+            rouges = {'1':[], '2':[], 'l':[]}
             for nr_sent in range(1, max_sent):
                 score1 = 0
                 scorel = 0
@@ -45,19 +63,22 @@ def main():
                     for datapoint in s:
                         score1 += datapoint[0]['rouge-1']['f']
                         scorel += datapoint[0]['rouge-l']['f']
+                        score2 += datapoint[0]['rouge-2']['f']
                 score1 /= tot_points * 2
                 scorel /= tot_points * 2
-                rouge1.append(score1)
-                rougel.append(scorel)
-            label_prefix = 'Redundant ' if red else 'Non-Redundant '
-            ax.plot(list(range(1,max_sent)),rouge1,label=label_prefix + 'Rouge-1')
-            ax.plot(list(range(1,max_sent)),rougel,label=label_prefix + 'Rouge-l')
-        ax.set_xlabel('Number of Sentences')
-        ax.set_ylabel('f Score')
-        ax.set_title(f'f Score vs. Sentences: {sim_funcs[sim]}')
-        ax.legend()
-        #ax.plot()
-        plt.show()
+                score2 /= tot_points * 2
+                rouges['1'].append(score1)
+                rouges['l'].append(scorel)
+                rouges['2'].append(score2)
+            label_prefix = ('Redundant ' if red else 'Non-Redundant ') if  len(redundancy) > 1 else ''
+            for rouge in score_type:
+                ax.plot(list(range(1,max_sent)),rouges[rouge],label=label_prefix + f'Rouge-[rouge]')
+    ax.set_xlabel('Number of Sentences')
+    ax.set_ylabel('f Score')
+    ax.set_title(title)
+    ax.legend()
+    #ax.plot()
+    plt.show()
 
 if __name__ == "__main__":
     main()
