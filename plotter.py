@@ -40,11 +40,11 @@ def main():
                     print(f'{nr_sent} sentence summaries done...')
                 print('Similarity function done...')
             print('Redundant included done...' if red else 'Redundant excluded done...')
-
+        
         pickle.dump(scores,open(f'scores','wb'))
     scores = pickle.load(open(f'scores','rb'))
     if mult:
-        for sc in score_types:
+        for sc in score_type:
             for sim in sim_funcs:
                 fig,ax = plt.subplots()
                 for red in redundancy:
@@ -52,12 +52,13 @@ def main():
                     for nr_sent in range(1, max_sent):
                         score1 = 0
                         scorel = 0
+                        score2 = 0
                         tot_points = len(scores[(red,sim,nr_sent)])
                         for s in scores[(red,sim,nr_sent)]:
                             for datapoint in s:
-                                score1 += datapoint[0]['rouge-1']['f']
-                                scorel += datapoint[0]['rouge-l']['f']
-                                score2 += datapoint[0]['rouge-2']['f']
+                                score1 += datapoint['rouge-1']['f']
+                                scorel += datapoint['rouge-l']['f']
+                                score2 += datapoint['rouge-2']['f']
                         score1 /= tot_points * 2
                         scorel /= tot_points * 2
                         score2 /= tot_points * 2

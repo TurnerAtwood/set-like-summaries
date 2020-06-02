@@ -1,11 +1,12 @@
 from math import inf, ceil
-from nltk.tokenize import sent_tokenize # Sentence tokenizer
+from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.stem import PorterStemmer
 from operator import itemgetter
 
 import json
 import numpy as np
 import progressbar
-from rouge import Rouge
+import rouge
 import random
 import sister # Sentence Embedding generator
 import sys
@@ -23,6 +24,9 @@ The sky’s too fickle. It’s a play-place for butterflies.
 
 DATA_FILE_NAME = './static/txt/ProjectData.txt'
 EMBEDDER = sister.MeanEmbedding(lang="en")
+ROUGE_EVALUATOR = rouge.Rouge(metrics = ['rouge-n','rouge-l'],
+                              max_n=2,
+                              stemming=True)
 TOPIC_LIMIT = inf # Set to inf to run over all topics in CLI
 
 def main():
@@ -36,7 +40,7 @@ def summarize(article1, article2, operation_choice, similarity_choice, num_sente
   article1_features = get_sentence_features(article1)
   article2_features = get_sentence_features(article2)
   our_summary = operation[operation_choice](article1_features, article2_features, similarity[similarity_choice], num_sentences)
-  scores = Rouge().get_scores(our_summary, their_summary)[0]
+  scores = ROUGE_EVALUATOR.get_scores(our_summary, their_summary)
 
   return our_summary, scores
 
@@ -94,7 +98,7 @@ def generate_summary(article1, used_indices):
 # Wrapper for the rouge function to pick out a single rouge and metric.
 ## type = '1'/'2'/'l', metric = 'f'/'p'/'r'
 def score_summary(hypothesis, reference, rouge_type = 'l', metric = 'f'):
-  scores = Rouge().get_scores(hypothesis, reference)[0]
+  scores = ROUGE_EVALUATOR.get_scores(hypothesis, reference)
   rouge_l = scores[f'rouge-{rouge_type}'][metric]
   return rouge_l
 
@@ -206,8 +210,13 @@ def read_data():
 def calc_scores(topics, nr_sentences, similarity, redundancy):
   red = 0.92
   if redundancy:
-    red = 1
+    red = 1.1
   scores = []
+
+
+  rouge_evaluator = rouge.Rouge(metrics = ['rouge-n','rouge-l'],
+                                max_n=2,
+                                stemming=True)
 
   count = 0
   for i,topic in enumerate(topics):
@@ -216,17 +225,17 @@ def calc_scores(topics, nr_sentences, similarity, redundancy):
 
     r_l_summ = intersection(topic[2], topic[4], similarity, nr_sentences, red)
     try:
-      r_l_score = Rouge().get_scores(r_l_summ, topic[1])
+      r_l_score = ROUGE_EVALUATOR.get_scores(r_l_summ, topic[1])
     except:
       count += 1
-      r_l_score = [{'rouge-1': {'f':0}, 'rouge-l': {'f':0}}]
+      r_l_score = ROUGE_EVALUATOR.get_scores("","")
     #l_c_score = Rouge().get_scores(intersection(topic[2], topic[3], similarity, nr_sentences, red), topic[1])
     l_r_summ = intersection(topic[4], topic[2], similarity, nr_sentences, red)
     try:
-      l_r_score = Rouge().get_scores(l_r_summ, topic[1])
+      l_r_score = ROUGE_EVALUATOR.get_scores(l_r_summ, topic[1])
     except:
       count += 1
-      r_l_score = [{'rouge-1': {'f':0}, 'rouge-l': {'f':0}}]
+      l_r_score = ROUGE_EVALUATOR.get_scores("","")
     #r_c_score = Rouge().get_scores(intersection(topic[4], topic[3], similarity, nr_sentences, red), topic[1])
     #c_r_score = Rouge().get_scores(intersection(topic[3], topic[4], similarity, nr_sentences, red), topic[1])
     #c_l_score = Rouge().get_scores(intersection(topic[3], topic[2], similarity, nr_sentences, red), topic[1])
@@ -286,16 +295,12 @@ def run_interactive_mode(data):
       print(f"Rouge Score: {score}\n")
 
     # Constructive user error handling :)
-    except KeyError as E:
-      print("\nKeyError: %s" % E)
-      print("Way to go idiot.\n")
+    # except KeyError as E:
+    #   print("\nKeyError: %s" % E)
     except ValueError as E:
       print("\nValueError: %s" % E)
-      print("Really? Great job you fart.\n")
     except IndexError as E:
       print("\nIndexError: %s" % E)
-      print("Not even close. Try reading more.\n")
-
 
 if __name__ == "__main__":
   main()

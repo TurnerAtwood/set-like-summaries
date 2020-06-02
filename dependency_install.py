@@ -6,7 +6,7 @@ DEPENDENCIES = ['scipy',
                 'numpy', 
                 'sister', 
                 'nltk', 
-                'rouge', 
+                'py-rouge', 
                 'progressbar', 
                 'Flask',
                 'matplotlib']
