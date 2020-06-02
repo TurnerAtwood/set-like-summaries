@@ -6,6 +6,7 @@ import json
 import numpy as np
 import progressbar
 from rouge import Rouge
+import random
 import sister # Sentence Embedding generator
 import sys
 
@@ -77,7 +78,7 @@ def remove_redundant_sentences(pairs, threshold):
       pairs_similarity = cosine(current_pair[1][0], other_pair[1][0])
       if pairs_similarity > threshold:
         current_pair_good = False
-        print(f"\nBAD PAIR ({pairs_similarity}):\n{current_pair[1][1]}\n{other_pair[1][1]}")
+        # print(f"\nBAD PAIR ({pairs_similarity}):\n{current_pair[1][1]}\n{other_pair[1][1]}")
         break
     if current_pair_good:
       kept_pairs.append(current_pair)
