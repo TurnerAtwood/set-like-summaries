@@ -20,7 +20,7 @@ def main():
     sim_funcs = {project.cosine:'Cosine', project.euclidean:'Euclidean', project.manhattan:'Manhattan', project.random_selection:'Random'}
     redundancy = [False]
     title = 'f Score vs. Sentences: Rouge-'
-    score_type = ['1','2','1']
+    score_type = ['1','2','l']
     mult = True
     max_sent = 6
 
@@ -45,8 +45,8 @@ def main():
     scores = pickle.load(open(f'scores','rb'))
     if mult:
         for sc in score_type:
+            fig,ax = plt.subplots()
             for sim in sim_funcs:
-                fig,ax = plt.subplots()
                 for red in redundancy:
                     rouges = {'1':[], '2':[], 'l':[]}
                     for nr_sent in range(1, max_sent):
@@ -66,8 +66,7 @@ def main():
                         rouges['l'].append(scorel)
                         rouges['2'].append(score2)
                     label_prefix = ('Redundant ' if red else 'Non-Redundant ') if  len(redundancy) > 1 else ''
-                    for rouge in score_type:
-                        ax.plot(list(range(1,max_sent)),rouges[rouge],label=label_prefix + f'Rouge-[rouge]')
+                    ax.plot(list(range(1,max_sent)),rouges[sc],label=label_prefix + f'{sim_funcs[sim]} Rouge-{sc}')
             ax.set_xlabel('Number of Sentences')
             ax.set_ylabel('f Score')
             ax.set_title(title+sc)
