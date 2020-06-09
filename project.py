@@ -10,6 +10,7 @@ import rouge
 import random
 import sister # Sentence Embedding generator
 import sys
+import model as embeddings
 
 """
 COMP 5970 - Information Retrieval
@@ -23,7 +24,8 @@ The sky’s too fickle. It’s a play-place for butterflies.
 """
 
 DATA_FILE_NAME = './static/txt/ProjectData.txt'
-EMBEDDER = sister.MeanEmbedding(lang="en")
+#EMBEDDER = sister.MeanEmbedding(lang="en")
+EMBEDDER = sister.MeanEmbedding(lang="en",word_embedder=embeddings.convert_model())
 ROUGE_EVALUATOR = rouge.Rouge(metrics = ['rouge-n','rouge-l'],
                               max_n=2,
                               stemming=True)
