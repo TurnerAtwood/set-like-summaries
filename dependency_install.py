@@ -16,7 +16,8 @@ def main():
 		os.system(f'pip install {dep}')
 
 	import nltk
-	nltk.download('punkt')
+        nltk.download('punkt')
+	nltk.download('stopwords')
 
 if __name__ == "__main__":
 	main()

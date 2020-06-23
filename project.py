@@ -12,6 +12,9 @@ import sister # Sentence Embedding generator
 import sys
 import model as embeddings
 
+from nltk.corpus import stopwords
+STOPWORDS = set(stopwords.words('english'))
+
 """
 COMP 5970 - Information Retrieval
 
@@ -29,7 +32,7 @@ EMBEDDER = sister.MeanEmbedding(lang="en",word_embedder=embeddings.convert_model
 ROUGE_EVALUATOR = rouge.Rouge(metrics = ['rouge-n','rouge-l'],
                               max_n=2,
                               stemming=True)
-TOPIC_LIMIT = inf # Set to inf to run over all topics in CLI
+TOPIC_LIMIT = inf # Set to inf to run over all topics
 
 def main():
   data = read_data()
@@ -147,9 +150,19 @@ def get_sentence_features(text):
 
   sentence_features = list()
   for index, sentence in enumerate(text):
-    sentence_features.append( (EMBEDDER(sentence), sentence, index) )
+    # REMOVE STOP WORDS
+    sentence_without_stop_words = remove_stop_words(sentence)
+    sentence_features.append( (EMBEDDER(sentence_without_stop_words), sentence, index) )
 
   return sentence_features
+
+def remove_stop_words(text):
+  text = word_tokenize(text)
+  remaining_words = list()
+  for word in text:
+    if word not in STOPWORDS:
+      remaining_words.append(word)
+  return " ".join(remaining_words)
 
 
 def format(text):

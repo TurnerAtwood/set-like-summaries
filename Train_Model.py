@@ -3,20 +3,18 @@ import progressbar
 
 from gensim.models import Word2Vec
 from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.corpus import stopwords
 from math import inf
+
+STOPWORDS = set(stopwords.words('english'))
 
 DATA_FILE_NAME = './static/txt/ProjectData.txt'
 TOPIC_LIMIT = inf
 
 def main():
-  # training_sentences = read_data()
-  # model = Word2Vec(training_sentences, min_count=1, workers=8)
-  # model.save('model.bin')
-
-  # load model
-  new_model = Word2Vec.load('model.bin')
-  print(new_model["DACA"])
-  print(new_model["DACA"])
+  training_sentences = read_data()
+  model = Word2Vec(training_sentences, min_count=1, workers=8)
+  model.save('model.bin')
 
 def read_data():
   with open(DATA_FILE_NAME) as in_file:
@@ -28,6 +26,7 @@ def read_data():
   print(f"Reading data into a list of sentences ({data_size} topics)...")
 
   total_word_count = 0
+  stop_word_count = 0
 
   # Dump into a list of sentences (list of words)
   all_sentences = list()
@@ -45,12 +44,17 @@ def read_data():
         if sentence:
           sentence_words = word_tokenize(sentence)
           total_word_count += len(sentence_words)
+
+          sentence_words = remove_stop_words(sentence_words)
+
+          stop_word_count += len(sentence_words)
           all_sentences.append(sentence_words)
 
     bar.update(i+1)
   bar.finish()
 
   print(total_word_count)
+  print(stop_word_count)
 
   return all_sentences
 
@@ -59,6 +63,12 @@ def clean_sentence(text):
   text = text.replace(".","")
   return text
 
+def remove_stop_words(text):
+  remaining_words = list()
+  for word in text:
+    if word not in STOPWORDS:
+      remaining_words.append(word)
+  return remaining_words
 
 if __name__ == "__main__":
   main()
